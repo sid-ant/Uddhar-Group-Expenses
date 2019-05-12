@@ -11,8 +11,6 @@ bp = Blueprint('auth',__name__,url_prefix='/auth')
 def register():
     
     req =  request.get_json()
-    current_app.logger.debug("Register user request : %s ",req)
-
     password =  req.get("password")
     email = req.get("email")
     phone = req.get("phone")

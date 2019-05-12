@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask
+from flask import Flask, request
 import logging
 
 
@@ -38,4 +38,17 @@ def create_app(test_config=None):
     from . import auth
     app.register_blueprint(auth.bp)
 
+
+    @app.before_request
+    def logrequest():
+        app.logger.debug("%s",request)
+        app.logger.debug("%s",request.get_json())
+
+    @app.after_request
+    def logresponse(response):
+        app.logger.debug(response)
+        app.logger.debug("%s",response.get_json())
+        return response
+
     return app
+
