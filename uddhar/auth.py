@@ -65,15 +65,35 @@ def login():
         responseObject['status']="authentication failure"
         return make_response(jsonify(responseObject)),401
     
-    payload = {
-        'sub':user['user_id'],
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1, seconds=5),
-        'iat': datetime.datetime.utcnow(),
-    }
-    current_app.logger.debug(current_app.config['SECRET_KEY'])
-    token = jwt.encode(payload,current_app.config['SECRET_KEY'],algorithm='HS256')
+    sub = user['user_id']
+    token = create_token(sub)
     responseObject['status']="Success"
     responseObject['token']=token.decode()
 
     return make_response(jsonify(responseObject)),200
 
+def create_token(sub):
+    payload = {
+        'sub':sub,
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=1, seconds=5),
+        'iat': datetime.datetime.utcnow(),
+    }
+    token = jwt.encode(payload,current_app.config['SECRET_KEY'],algorithm='HS256')
+    return token
+    
+def verify_token(token):
+
+    errorResponse = {
+        'status':'7001',
+        'errorMessage':None
+    }
+
+    try: 
+        payload = jwt.decode(token,current_app.config.get('SECRET_KEY'))
+        return payload['sub']
+    except jwt.ExpiredSignatureError:
+        errorResponse['errorMessage']='Expired Token, Please Login Again'
+        return make_response(jsonify(errorResponse)),401
+    except jwt.InvalidSignatureError:
+        errorResponse['errorMessage']='Invalid Token, Please Login Again'
+        return make_response(jsonify(errorResponse)),401
