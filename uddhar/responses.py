@@ -1,11 +1,11 @@
 
 
 errorResponse={
-    "status":None
+    "status":None,
     "message":None
 }
 
 successResponse={
-    "status":None
+    "status":None,
     "message":None
 }

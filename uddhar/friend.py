@@ -1,14 +1,17 @@
-from flask import {
-    Flask, request, Blueprint, current_app, jsonify, make_response
-}
+from flask import (
+    Flask, request, Blueprint, current_app, jsonify, make_response,_request_ctx_stack
+)
 
-import DB
-import responses
+from uddhar.db import get_db
+from uddhar import responses
+
+from uddhar.auth import login_required,current_identity
 
 bp = Blueprint('friend',__name__)
 
-bp.route('/add-friend',methods=['GET'])
-def addFriend(payload_sub):
+@bp.route('/add-friend',methods=['GET'])
+@login_required
+def addFriend():
 
     email = request.args.get('e')
     phone = request.args.get('p')
@@ -28,7 +31,7 @@ def addFriend(payload_sub):
         return make_response(jsonify(errorResponse)),404
     
     user_id = user['user_id']
-    current_user = payload_sub
+    current_user = current_identity # how do I get this 
     query = "INSERT into FRIEND (user_a,user_b) VALUES (?,?)"
 
     db.execute(query,(current_user,user_id))
@@ -36,7 +39,11 @@ def addFriend(payload_sub):
     response = response.successResponse
     response['status']="2011"
     response['message']="Successfully, Added Friend"
-    return make_response(jsonif(response)),201
+    return make_response(jsonify(response)),201
 
 
     
+@bp.route('/yahoo',methods=['GET'])
+@login_required
+def helloworld():
+    current_app.logger.info('Current User Is: %s',current_identity)

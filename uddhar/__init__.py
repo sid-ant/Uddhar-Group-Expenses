@@ -32,6 +32,9 @@ def create_app(test_config=None):
     from . import auth
     app.register_blueprint(auth.bp)
 
+    from . import friend
+    app.register_blueprint(friend.bp)
+
 
     @app.before_request
     def logrequest():

@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, Flask, g, redirect, request, jsonify, make_response,current_app
+    Blueprint, Flask, g, redirect, request, jsonify, make_response,current_app,_request_ctx_stack
 )
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -7,6 +7,11 @@ from uddhar.db import get_db
 
 import jwt 
 import datetime
+
+import uddhar.responses as json_responses
+
+from functools import wraps
+
 
 bp = Blueprint('auth',__name__,url_prefix='/auth')
 
@@ -81,19 +86,32 @@ def create_token(sub):
     token = jwt.encode(payload,current_app.config['SECRET_KEY'],algorithm='HS256')
     return token
     
-def verify_token(token):
 
-    errorResponse = {
-        'status':'7001',
-        'errorMessage':None
-    }
+from werkzeug.local import LocalProxy
+current_identity = LocalProxy(lambda: getattr(_request_ctx_stack.top, 'current_identity', None))
 
-    try: 
-        payload = jwt.decode(token,current_app.config.get('SECRET_KEY'))
-        return payload['sub']
-    except jwt.ExpiredSignatureError:
-        errorResponse['errorMessage']='Expired Token, Please Login Again'
-        return make_response(jsonify(errorResponse)),401
-    except jwt.InvalidSignatureError:
-        errorResponse['errorMessage']='Invalid Token, Please Login Again'
-        return make_response(jsonify(errorResponse)),401
+def login_required(func): 
+    @wraps(func)
+    def verify_token(*args, **kwargs):
+        auth_token = request.headers.get('Authorization')
+        if auth_token is None:
+            errorResponse = json_responses.errorResponse
+            errorResponse['status']='7001'
+            errorResponse['message']='Authorization Header Required'
+            return make_response(jsonify(errorResponse)),401
+        try: 
+            payload = jwt.decode(auth_token,current_app.config.get('SECRET_KEY'))
+            current_app.logger.debug("INFO : %s",payload.get('sub'))
+            _request_ctx_stack.top.current_identity = payload.get('sub')
+            return func(*args, **kwargs)
+        except jwt.ExpiredSignatureError:
+            errorResponse = json_responses.errorMessage
+            errorResponse['message']='Expired Token, Please Login Again'
+            return make_response(jsonify(errorResponse)),401
+        except jwt.InvalidSignatureError:
+            errorResponse = json_responses.errorMessage
+            errorResponse['message']='Invalid Token, Please Login Again'
+            return make_response(jsonify(errorResponse)),401
+    return verify_token
+
+            
