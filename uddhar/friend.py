@@ -57,10 +57,10 @@ def addFriend():
 @login_required
 def list_friends():
     db = get_db()
-    query = 'SELECT user_b FROM friend WHERE user_a = ?'
+    query = 'SELECT name,email FROM user INNER JOIN friend ON user.user_id = friend.user_b WHERE friend.user_a = ?'
     try:
         friends = db.execute(query,(int(current_identity),)).fetchall()
-        friends = list(map(lambda x : list(x),list(friends)))
+        friends = list(map(lambda x : dict(x),list(friends)))
         current_app.logger.debug(friends)
     except sqlite3.Error as er:
         current_app.logger.error("%s",er)
