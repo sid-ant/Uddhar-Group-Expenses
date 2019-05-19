@@ -1,11 +1,9 @@
 
 
-errorResponse={
-    "status":None,
-    "message":None
-}
+def createResponse(status,message):
+    json_response = {
+        "status":status,
+        "message":message
+    }
 
-successResponse={
-    "status":None,
-    "message":None
-}
+    return json_response

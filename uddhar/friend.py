@@ -26,10 +26,11 @@ def addFriend():
         query = "SELECT * FROM USER where PHONE = ?"
         user = db.execute(query, (phone,)).fetchone()
     else:
-        errorResponse = responses.errorResponse
-        errorResponse['status']="x4041"
-        errorResponse['message']="User Not Found"
-        return make_response(jsonify(errorResponse)),404
+        errorResponse = responses.make_response('x4041','No Input')
+        return make_response(jsonify(errorResponse)),400
+    
+    if user_id is None:
+        return make_response(jsonify(responses.make_response('x3031','User not found'))),404
     
     user_id = user['user_id']
 
@@ -44,19 +45,25 @@ def addFriend():
     except sqlite3.Error as er:
         current_app.logger.debug("SQL Lite Error : ")
         current_app.logger.debug("%s",er)
-        errorResponse = responses.errorResponse
-        errorResponse['status']="x9001"
-        errorResponse['message']="Contraint Failure"
+        errorResponse = responses.createResponse('x9001','Contraint Failure')
         return make_response(jsonify(errorResponse)),400
 
-    successResponse = responses.successResponse
-    successResponse['status']="2011"
-    successResponse['message']="Successfully, Added Friend"
+    successResponse = responses.createResponse('2011','Friend Added')
     return make_response(jsonify(successResponse)),201
 
 
     
-@bp.route('/yahoo',methods=['GET'])
+@bp.route('/friends',methods=['GET'])
 @login_required
-def helloworld():
-    current_app.logger.info('Current User Is: %s',current_identity)
+def list_friends():
+    db = get_db()
+    query = 'SELECT user_b FROM friend WHERE user_a = ?'
+    try:
+        friends = db.execute(query,(int(current_identity),)).fetchall()
+        friends = list(map(lambda x : list(x),list(friends)))
+        current_app.logger.debug(friends)
+    except sqlite3.Error as er:
+        current_app.logger.error("%s",er)
+        return make_response(jsonify(responses.createResponse('x9001','Failure'))),400
+    return make_response(jsonify(responses.createResponse('1001',friends))),200
+        
