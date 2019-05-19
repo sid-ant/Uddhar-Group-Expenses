@@ -17,9 +17,10 @@ CREATE TABLE user (
 CREATE TABLE friend (
   friend_id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_a INTEGER NOT NULL, 
-  user_b INTEGER NOT NULL, 
+  user_b INTEGER NOT NULL CHECK (user_b!=user_a), 
   FOREIGN KEY (user_a) REFERENCES user (id),
-  FOREIGN KEY (user_b) REFERENCES user (id)
+  FOREIGN KEY (user_b) REFERENCES user (id),
+  UNIQUE(user_a, user_b)
 );
 
 

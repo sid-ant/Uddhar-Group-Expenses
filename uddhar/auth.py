@@ -101,6 +101,7 @@ def login_required(func):
             return make_response(jsonify(errorResponse)),401
         try: 
             payload = jwt.decode(auth_token,current_app.config.get('SECRET_KEY'))
+            # do I trust this payload or should I verify the existance of the user, one more time?
             current_app.logger.debug("INFO : %s",payload.get('sub'))
             _request_ctx_stack.top.current_identity = payload.get('sub')
             return func(*args, **kwargs)

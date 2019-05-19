@@ -6,7 +6,7 @@ import logging
 
 def create_app(test_config=None):
 
-    logging.basicConfig(filename='app.log', filemode='a+', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    # logging.basicConfig(filename='app.log', filemode='w', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     app = Flask(__name__, instance_relative_config=True)
     # placeholder secret_key, overwritten by reading from config file -- not tracked in git 
     app.config.from_mapping(

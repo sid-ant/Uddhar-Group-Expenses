@@ -4,6 +4,7 @@ from flask import (
 
 from uddhar.db import get_db
 from uddhar import responses
+import sqlite3
 
 from uddhar.auth import login_required,current_identity
 
@@ -31,15 +32,27 @@ def addFriend():
         return make_response(jsonify(errorResponse)),404
     
     user_id = user['user_id']
-    current_user = current_identity # how do I get this 
-    query = "INSERT into FRIEND (user_a,user_b) VALUES (?,?)"
 
-    db.execute(query,(current_user,user_id))
-    db.commit()
-    response = response.successResponse
-    response['status']="2011"
-    response['message']="Successfully, Added Friend"
-    return make_response(jsonify(response)),201
+    query = 'INSERT into FRIEND (user_a, user_b) VALUES (?,?)'
+
+    current_app.logger.debug("current user is %s",current_identity)
+    current_app.logger.debug("request friend is %s",user_id)
+
+    try:
+        db.execute(query,(int(current_identity),user_id))
+        db.commit()
+    except sqlite3.Error as er:
+        current_app.logger.debug("SQL Lite Error : ")
+        current_app.logger.debug("%s",er)
+        errorResponse = responses.errorResponse
+        errorResponse['status']="x9001"
+        errorResponse['message']="Contraint Failure"
+        return make_response(jsonify(errorResponse)),400
+
+    successResponse = responses.successResponse
+    successResponse['status']="2011"
+    successResponse['message']="Successfully, Added Friend"
+    return make_response(jsonify(successResponse)),201
 
 
     
